@@ -29,7 +29,7 @@ Para a instalação do Operador do OpenTelemetry para Kubernetes, é preciso ter
 
 Pode ser instalado através do comando baixo:
 
-```kubectl 
+```bash 
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.11.0/cert-manager.yaml 
 ```
  Se tiver um **OKE** (Oracle Kubernetes Engine) Ehenced Cluster no OCI é possível adicionar através dos Add-ons. Documentação [aqui](https://docs.oracle.com/en-us/iaas/Content/ContEng/Tasks/contengconfiguringclusteraddons.htm#contengconfiguringclusteraddons).
@@ -38,8 +38,8 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 
 Para instalar o Operator para Kubernetes basta executar o comando abaixo:
 
-```kubectl
-$ kubectl apply -f https://github.com/open-telemetry/opentelemetry-operator/releases/latest/download/opentelemetry-operator.yaml
+```bash
+kubectl apply -f https://github.com/open-telemetry/opentelemetry-operator/releases/latest/download/opentelemetry-operator.yaml
 ```
 
 > Revise a documentação do [OpenTelemetry Operator](https://opentelemetry.io/docs/k8s-operator/)
@@ -84,7 +84,7 @@ No menu inferior do lado esquerdo da console do APM Domain podemos encontrar a O
 
 Execute o código abaixo alterando as informações de **{DATA_KEY}** e **{DATA_UPLOAD_ENDPOINT}**.
 
-```kubectl
+```bash
 cat <<EOF | kubectl apply -f -
 apiVersion: opentelemetry.io/v1alpha1
 kind: OpenTelemetryCollector
