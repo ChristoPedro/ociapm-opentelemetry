@@ -1,0 +1,29 @@
+import os
+from flask import Flask
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+
+app = Flask(__name__)
+
+# Configure OpenTelemetry
+trace.set_tracer_provider(TracerProvider(resource=Resource.create({'service.name': 'my-flask-app'})))
+tracer = trace.get_tracer(__name__)
+otlp_exporter = OTLPSpanExporter(endpoint=os.getenv('COLLECTOR-ENDPOINT'))
+span_processor = SimpleSpanProcessor(otlp_exporter)
+trace.get_tracer_provider().add_span_processor(span_processor)
+
+# Instrument Flask
+FlaskInstrumentor().instrument_app(app)
+
+# Define a sample route that creates a trace
+@app.route('/hello')
+def hello():
+    with tracer.start_as_current_span('hello'):
+        return 'Hello, World!'
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0')
