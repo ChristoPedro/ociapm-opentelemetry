@@ -16,6 +16,7 @@ Esse tutorial tem como objetivo mostrar como instalar e configurar o OpenTelemet
   - [Criando um OpenTelemetry Collector](#criando-um-opentelemetry-collector)
   - [Testando a configuração](#testando-a-configuração)
     - [Primeiro Teste](#primeiro-teste)
+    - [Segundo Teste](#segundo-teste)
 
 
 
@@ -203,3 +204,63 @@ Abra o trace explorer do APM na console do OCI, a partir do menu de hamburguer n
 Filtre pelo compartment e pelo APM Domain na parte superior a direita e você deve ver alguns traces como os abaixo.
 
 ![Printscreen trace python com otel lib](/images/trace-python-otel-lib.png)
+
+### Segundo Teste
+
+OpenTelemetry tem um injector de Auto-instrumentation para as linguagens: .NET, Python, nodeJS e Java. Isso quer dizer que é possível adaptar um código que não tem as libs do OpenTelemetry, o Operator fará uma injeção das ferramentas necessárias para monitorar a aplicação.
+
+1. Primeiro é preciso criar o *instrumentation* para a linguagem desejada. Aqui o será criada a *instrumentation* para Python, mas na [documentação](https://opentelemetry.io/docs/k8s-operator/automatic/) pode ser encontrada a configuração para as outras linguagens.
+
+Execute o comando abaixo.
+
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: python
+spec:
+  exporter:
+    endpoint: http://simplest-collector.default:4318
+  propagators:
+    - jaeger
+    - b3
+  sampler:
+    type: parentbased_traceidratio
+    argument: "1"
+EOF
+```
+
+> Se for tiver sido feita alguma alteração no deployement do Collector, é preciso atualizar o campo do **endpoint**.
+
+2. Com o *instrumentation* criado, é preciso atualizar o deployment python criado anteriormente para utilizar uma docker image onde o código de python não tem as libs do opentelemetry. Vamos utilizar o seguinte [código](/python-sem-opentelemetry/).
+
+Execute o comando abaixo.
+
+```bash
+cat << EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+      annotations:
+        instrumentation.opentelemetry.io/inject-python: 'true'
+    spec:
+      containers:
+        - name: flask-app
+          image: pedrochristo/teste-python-otel-semlib:latest
+          ports:
+            - containerPort: 5000
+EOF
+```
+
+Após a atualização do deployment repita o processo de realizar algumas chamadas no ip público do service e depois validar se os traces apareceram no Trace Explorer do APM. 
