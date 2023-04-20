@@ -105,7 +105,7 @@ spec:
         headers:
           Authorization: "dataKey {DATA_KEY}"
       otlphttp/metrics:
-        endpoint: "{DATA_UPLOAD_ENDPOINT/20200101/opentelemetry"
+        endpoint: "{DATA_UPLOAD_ENDPOINT}/20200101/opentelemetry"
         headers:
           Authorization: "dataKey {DATA_KEY}"
     service:
@@ -173,7 +173,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: flask-service
-  annotations:
 spec:
   type: LoadBalancer
   ports:
@@ -298,7 +297,7 @@ spec:
         headers:
           Authorization: "dataKey {DATA_KEY}"
       otlphttp/metrics:
-        endpoint: "{DATA_UPLOAD_ENDPOINT/20200101/opentelemetry"
+        endpoint: "{DATA_UPLOAD_ENDPOINT}/20200101/opentelemetry"
         headers:
           Authorization: "dataKey {DATA_KEY}"
     service:
