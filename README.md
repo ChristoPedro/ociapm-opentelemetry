@@ -17,6 +17,7 @@ Esse tutorial tem como objetivo mostrar como instalar e configurar o OpenTelemet
   - [Testando a configuração](#testando-a-configuração)
     - [Primeiro Teste](#primeiro-teste)
     - [Segundo Teste](#segundo-teste)
+    - [Terceiro Teste](#terceiro-teste)
 
 
 
@@ -263,4 +264,101 @@ spec:
 EOF
 ```
 
-Após a atualização do deployment repita o processo de realizar algumas chamadas no ip público do service e depois validar se os traces apareceram no Trace Explorer do APM. 
+Após a atualização do deployment repita o processo de realizar algumas chamadas no ip público do service e depois validar se os traces apareceram no Trace Explorer do APM.
+
+### Terceiro Teste
+
+OpenTelemetry Operator oferece também a possibilidade de executar o collector como um sidecar de cada pod.
+
+Para isso será alterada a confiração do Colletor para a de sidecar, e será adicionada uma annotation no deployment para ocorrer a injeção do sidecar no pod, além do endpoint do OpenTelemetry que em vez de apontar para o service do collector vai apontar para o localhost.
+
+1. Alteração da Configuração do Collector
+
+Execute o código abaixo alterando as informações de **{DATA_KEY}** e **{DATA_UPLOAD_ENDPOINT}**.
+
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: opentelemetry.io/v1alpha1
+kind: OpenTelemetryCollector
+metadata:
+  name: simplest
+spec:
+  mode:sidecar
+  config: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
+    exporters:
+      otlphttp:
+        endpoint: "{DATA_UPLOAD_ENDPOINT}/20200101/opentelemetry/private"
+        headers:
+          Authorization: "dataKey {DATA_KEY}"
+      otlphttp/metrics:
+        endpoint: "{DATA_UPLOAD_ENDPOINT/20200101/opentelemetry"
+        headers:
+          Authorization: "dataKey {DATA_KEY}"
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: []
+          exporters: [otlphttp]
+        metrics:
+          receivers: [otlp]
+          processors: []
+          exporters: [otlphttp/metrics]
+EOF
+```
+
+2. Fazer alteração do Instrumentation para apontar para o localhost.
+
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: python
+spec:
+  exporter:
+    endpoint: http://localhost:4318
+  propagators:
+    - jaeger
+    - b3
+  sampler:
+    type: parentbased_traceidratio
+    argument: "1"
+EOF
+```
+
+3. Alterar o Deployment para adicionar a annotation do sidecar Collector e já subir novamente com a nova configuração do instrumentation.
+
+```bash
+cat << EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+      annotations:
+        sidecar.opentelemetry.io/inject: 'true'
+        instrumentation.opentelemetry.io/inject-python: 'true'
+    spec:
+      containers:
+        - name: flask-app
+          image: pedrochristo/teste-python-otel-semlib:latest
+          ports:
+            - containerPort: 5000
+EOF
+```
+
+Após a atualização do deployment repita o processo de realizar algumas chamadas no ip público do service e depois validar se os traces apareceram no Trace Explorer do APM.
