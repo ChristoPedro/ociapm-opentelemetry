@@ -272,6 +272,8 @@ OpenTelemetry Operator oferece também a possibilidade de executar o collector c
 
 Para isso será alterada a confiração do Colletor para a de sidecar, e será adicionada uma annotation no deployment para ocorrer a injeção do sidecar no pod, além do endpoint do OpenTelemetry que em vez de apontar para o service do collector vai apontar para o localhost.
 
+> Para mais informações sobre usar o Colletor como sidecar visite a [documentação](https://github.com/open-telemetry/opentelemetry-operator).
+
 1. Alteração da Configuração do Collector
 
 Execute o código abaixo alterando as informações de **{DATA_KEY}** e **{DATA_UPLOAD_ENDPOINT}**.
