@@ -1,5 +1,7 @@
 # Enviando dados apra o OCI APM através OpenTelemetry Collector
 
+![Baner OCI OTEL](/images/apmociotel.png)
+
 Esse tutorial tem como objetivo mostrar como instalar e configurar o OpenTelemetry Operator para enviar métricas para o **APM** (Application Performance Monitoring) da Oracle Cloud.
 
 ## Conteúdo
